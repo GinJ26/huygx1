@@ -1,0 +1,126 @@
+//layout
+<div>
+        <center>
+            @Html.ActionLink("Xem Danh Sách", "Index", "NhanViens")<label>&nbsp;|&nbsp;</label>
+            @{Html.RenderAction("Menu", "NhanViens");}
+                @if (Session["ma"] == null)
+                {
+                <a href="/NhanViens/Login">Login</a>
+            }
+            else
+            {
+                <label>Chúc mừng bạn &nbsp;</label><b>@Session["ma"]"</b><label>&nbsp;|&nbsp;</label>
+                <a href="/NhanViens/Logout">Logout</a>
+            }
+        </center>
+    </div>
+
+
+//NhanVienController
+ public ActionResult Menu()
+        {
+            var li = db.Phongs.ToList();
+            return PartialView(li);
+        }
+        [Route("NhanVienTheoPhong/{MaPhong}")]
+        public ActionResult HienThiTheoPhong( int Maphong)
+        {
+            var li= db.NhanViens.Where(e => e.Maphong == Maphong ).ToList();
+            return View(li);
+        }
+        public ActionResult Login()
+        {
+            return View();
+        }
+        [HttpPost]
+        public ActionResult Login(string ma,string password)
+        {
+            var user = db.NhanViens.Where(n => n.Manv.ToString() == ma && n.Matkhau == password).FirstOrDefault();
+            if (user == null)
+            {
+                ViewBag.errLogin = "Sai mã hoặc mật khẩu";
+                return View();
+            }
+            else
+            {
+                Session["ma"] = ma;
+                return RedirectToAction("Index", "NhanViens");
+            }
+        }
+        public ActionResult Logout()
+        {
+            Session["ma"] = null;
+            return RedirectToAction("Index", "NhanViens");
+        }
+
+
+//Login.index
+div class="Login">
+    <div class="input">
+        @using (Html.BeginForm())
+            {
+                <p><label>Mã Nhân Viên</label><input type="text" name="ma" /></p><br />
+                <p><label>Mật Khẩu</label><input type="text" name="password"/></p><br />
+                <p><input class="lg" type="submit" value="Login"/></p>
+            }
+    </div>
+    @ViewBag.errLogin
+</div>
+//menu.indext
+@model IEnumerable<Pro_OnTap.Models.Phong>
+@foreach(var item in Model)
+{
+    var url = "/NhanVienTheoPhong/" + item.Maphong;
+                    <a href="@url">@item.Tenphong</a><label>&nbsp;|&nbsp;</label>
+            }
+
+
+
+
+//Create.index
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="button" name="submitButton" id="btnSave" value="Save" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+<div id="msg" style="color:red"></div>
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script type="text/javascript">
+        $(function () {
+            $("#btnSave").click(function () {
+                var nv = {};
+                nv.HoTen = $("#HoTen").val();
+                nv.MatKhau = $("#MatKhau").val();
+                nv.Tuoi = $("#Tuoi").val();
+                nv.DiaChi = $("#DiaChi").val();
+                nv.Luong = $("#Luong").val();
+                nv.MaPhong = $("#MaPhong").val();
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("/Create")',
+                    data: '{nv:' + JSON.stringify(nv) + '}',
+                    dataType: "json",
+                    contentType: "application/json, charset=utf-8",
+                    success: function (response) {
+                        if (response.result == true) {
+                            $("#msg").html('Thêm thành công!');
+                        }
+                        else {
+                            $("#msg").html('Thêm thất bại');
+                        }
+                    },
+
+                });
+                return false;
+            });
+        });
+    </script>
+}
